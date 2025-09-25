@@ -2,15 +2,15 @@
 seed = 42
 
 # Model configuation:
-feature_channels = 108
-num_blocks = 12
+feature_channels = 96
+num_blocks = 4
 act_type = "gelu"
 is_train = True
 model_name = "RT4KSR_Rep"
 
 # Data configuration:
 dataroot = "../Datasets/GameFrames"
-scale = 10
+scale = 8
 batch_size = 1
 num_workers = 4
 crop_size = 256
@@ -56,14 +56,14 @@ val_save_path = "results/val/Set5"
 
 # Inference configuration:
 infer_reparameterize = True
-checkpoint_path_infer= "checkpoints/decode/scale10/ch108/last.ckpt"
+checkpoint_path_infer= "checkpoints/BeatSaber/scale8Channels96Block4.ckpt"
 
 
 
 infer_lr_image_path = "/localhome/gba50/Finalize/dataset/test/cr/resultsOfRTX4000/scale10/stitched"
 
 infer_save_path = "/localhome/gba50/Finalize/dataset/test/cr/resultsOfRTX4000/scale10/stitched/SR"
-ground_truth_path = "/localhome/gba50/Finalize/dataset/hr/test/decoded_crf18"
+ground_truth_path = "/localhome/gba50/Finalize/dataset/hr/test/"
 
 # Video inference configuration:
 video_infer_reparameterize = True

@@ -34,7 +34,7 @@ def main():
     print(f"Number of parameters in the model: {params_count}")
     # Warm-up
     for _ in range(5):
-        dummy_input = torch.rand(1, 3, 200, 400, device=device)
+        dummy_input = torch.rand(1, 3, 250, 500, device=device)
         with torch.no_grad():
             litmodel(dummy_input)
 
