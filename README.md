@@ -6,7 +6,7 @@
 Use the following command to run the colorization model:
 
 ```bash
-python testquantization.py --config 1 --ckp colorization/checkpoints/BeatSaber/scale8Channels48.pth
+python testquantization.py --config 1 --ckp checkpoints/BeatSaber/scale8Channels48.pth
 ```
 
 ### Prepare for Stitching
