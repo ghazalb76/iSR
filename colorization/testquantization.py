@@ -12,6 +12,8 @@ from PIL import Image
 from einops import rearrange
 from torch.cuda.amp import autocast
 import os
+import lpips
+
 def warm_up_gpu(model, device):
     """
     Warm up the GPU by running a few dummy forward passes.
@@ -38,8 +40,12 @@ def save(img, path, flag, mode):
     cnt = path.split("\\")[-1].replace("L", flag)
     img.save(f"{cnt}")
 
+
 def run(args, ckp):
+    lpips_model = lpips.LPIPS(net='alex')
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    lpips_model.to(device)
 
     # Initialize and load the model
     model = SICNet.SICNet(channels=args.MODEL.channels)
@@ -60,9 +66,10 @@ def run(args, ckp):
     start = time.time()
     psnr = 0
     ssim = 0
+    lpips_score = 0
     valid_psnr_count = 0
     total_time_per_frame = []
-    n=0
+    n = 0
 
     with torch.no_grad(), autocast():
         model.eval()
@@ -86,15 +93,27 @@ def run(args, ckp):
             total_time_per_frame.append(elapsed_time)
 
             psnr_value = cal_psnr(output, T)
-            ssim += cal_ssim(output, T)
-            n+=1
+            ssim_value = cal_ssim(output, T)
+
+            # Ensure both 'output' and 'T' are on the same device as the LPIPS model
+            output = output.to(device)
+            T = T.to(device)
+
+            # Compute LPIPS score
+            lpips_value = lpips_model(output, T)  # LPIPS returns a tensor, not a scalar
+            lpips_score += lpips_value.item()  # We take the scalar value of the LPIPS score
+
+            n += 1
 
             if np.isfinite(psnr_value):
                 psnr += psnr_value
                 valid_psnr_count += 1
+
+            ssim += ssim_value
+
             save(output, samples[1][0], "out", "RGB")
 
-            log_message = f"Frame {idx + 1} inference time: {elapsed_time:.4f} ms with PSNR: {psnr_value:.4f} and SSIM: {cal_ssim(output, T):.4f}\n"
+            log_message = f"Frame {idx + 1} inference time: {elapsed_time:.4f} ms with PSNR: {psnr_value:.4f}, SSIM: {ssim_value:.4f}, and LPIPS: {lpips_value.item():.4f}\n"
             
             print(log_message)
 
@@ -108,6 +127,9 @@ def run(args, ckp):
     print(f"Average CUDA inference time per frame: {avg_frame_time:.4f} ms")
     print(f"PSNR: {psnr / valid_psnr_count:.4f}")
     print(f"SSIM: {ssim / n:.4f}")
+    print(f"LPIPS: {lpips_score / n:.4f}")  # Print the average LPIPS score
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
