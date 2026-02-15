@@ -207,28 +207,37 @@ def run(args, ckp):
     print(f"SSIM: {ssim / n:.4f}")
     print(f"LPIPS: {lpips_score / n:.4f}")
 
-    # ===== Find best 100 consecutive frames for PSNR / SSIM / Time =====
-    WINDOW = 100
+        # ===== Compute averages per non-overlapping 100-frame blocks =====
+    BLOCK_SIZE = 100
+    total_frames = len(frame_metrics)
 
-    res_psnr = best_window(frame_metrics, key="psnr", window=WINDOW, minimize=False, finite_only=True)
-    res_ssim = best_window(frame_metrics, key="ssim", window=WINDOW, minimize=False, finite_only=False)
-    res_time = best_window(frame_metrics, key="time_ms", window=WINDOW, minimize=True, finite_only=False)
-
-    if len(frame_metrics) < WINDOW:
-        print(f"\nNot enough frames for a {WINDOW}-frame window. Total frames: {len(frame_metrics)}")
+    if total_frames < BLOCK_SIZE:
+        print(f"\nNot enough frames for block size {BLOCK_SIZE}. Total frames: {total_frames}")
     else:
-        def print_range(title, res):
-            if res is None:
-                print(f"\n{title}: No valid window found.")
-                return
-            start_i, end_i, best_avg, _ = res
-            print(f"\n{title}")
-            print(f"Frame range (1-based): {start_i + 1} → {end_i + 1}")
-            print(f"Best average value: {best_avg:.6f}")
+        num_blocks = total_frames // BLOCK_SIZE
 
-        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG PSNR", res_psnr)
-        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG SSIM", res_ssim)
-        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG TIME (MIN)", res_time)
+        print(f"\n===== Averages per {BLOCK_SIZE}-Frame Block =====")
+
+        for b in range(num_blocks):
+            start_i = b * BLOCK_SIZE
+            end_i = start_i + BLOCK_SIZE
+
+            block = frame_metrics[start_i:end_i]
+
+            # Extract values
+            psnr_vals = [m["psnr"] for m in block if np.isfinite(m["psnr"])]
+            ssim_vals = [m["ssim"] for m in block]
+            time_vals = [m["time_ms"] for m in block]
+
+            avg_psnr = np.mean(psnr_vals) if len(psnr_vals) > 0 else float("nan")
+            avg_ssim = np.mean(ssim_vals)
+            avg_time = np.mean(time_vals)
+
+            print(f"\nBlock {b+1}: Frames {start_i+1} → {end_i}")
+            print(f"Average PSNR : {avg_psnr:.6f}")
+            print(f"Average SSIM : {avg_ssim:.6f}")
+            print(f"Average Time : {avg_time:.6f} ms")
+
 
 
 if __name__ == '__main__':
