@@ -217,21 +217,18 @@ def run(args, ckp):
     if len(frame_metrics) < WINDOW:
         print(f"\nNot enough frames for a {WINDOW}-frame window. Total frames: {len(frame_metrics)}")
     else:
-        def print_window_result(title, res):
+        def print_range(title, res):
             if res is None:
                 print(f"\n{title}: No valid window found.")
                 return
-            start_i, end_i, best_avg, names = res
+            start_i, end_i, best_avg, _ = res
             print(f"\n{title}")
-            print(f"Window indices: [{start_i} .. {end_i}] (1-based frames: {start_i + 1} .. {end_i + 1})")
-            print(f"Best average: {best_avg:.6f}")
-            print("Image names in this window:")
-            for nm in names:
-                print(nm)
+            print(f"Frame range (1-based): {start_i + 1} → {end_i + 1}")
+            print(f"Best average value: {best_avg:.6f}")
 
-        print_window_result(f"BEST {WINDOW}-FRAME WINDOW BY AVG PSNR", res_psnr)
-        print_window_result(f"BEST {WINDOW}-FRAME WINDOW BY AVG SSIM", res_ssim)
-        print_window_result(f"BEST {WINDOW}-FRAME WINDOW BY AVG TIME (MIN)", res_time)
+        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG PSNR", res_psnr)
+        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG SSIM", res_ssim)
+        print_range(f"BEST {WINDOW}-FRAME WINDOW BY AVG TIME (MIN)", res_time)
 
 
 if __name__ == '__main__':
