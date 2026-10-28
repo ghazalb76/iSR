@@ -49,8 +49,10 @@ Because iSR only adds a lightweight step before encoding and a GPU post-processi
 A lightweight model based on SiCNet, the state-of-the-art stereo colorization network, optimized for real-time VR gaming:
 
 - **Module pruning:** removed the Stereo Fusion and Stereo Consistency modules, which added latency for marginal quality gains in VR
-- **Depthwise-separable convolutions:** reduced latency by nearly 20% with negligible quality loss
-- **8-bit post-training quantization** of weights and activations: roughly halved the runtime
+- **Depthwise-separable convolutions:** replaced standard 3 × 3 convolutions to reduce computation
+- **8-bit post-training quantization** of weights and activations to reduce memory and latency
+
+Together, at ×4 scaling, these cut colorization time from 123 ms to 66.8 ms per frame and memory from 3.0 GB to 2.0 GB, with PSNR going from 41.10 to 40.12 dB.
 
 Feature-channel width is tuned per scale: 32 channels for ×4 and ×6, and 48 channels for ×8 and ×10.
 
@@ -66,7 +68,9 @@ Uses **GameSR**, an efficient upscaling model designed for gaming content, with 
 |---|---|---|---|
 | Watchable (≥ 70) | 18 Mbps | 8 Mbps | **56%** |
 | Good (≥ 80) | 24 Mbps | 12 Mbps | **50%** |
-| Excellent (≥ 90) | Not reached up to 26 Mbps | 26 Mbps | |
+| Excellent (≥ 90) | Not reached* | 26 Mbps | Only iSR reaches it |
+
+\*Native 4K did not reach VMAF 90 anywhere in the tested 2–26 Mbps range.
 
 ### Visual quality across games (×4 scaling)
 
@@ -76,7 +80,7 @@ Uses **GameSR**, an efficient upscaling model designed for gaming content, with 
 | Pavlov VR | 40.23 | 0.9789 | 0.0154 | 4.75 |
 | VRChat | 37.18 | 0.9701 | 0.0283 | 4.25 |
 
-MOS scores come from a user study with 8 participants. Even at ×8 and ×10 scaling, MOS stayed above 3.6 for all games.
+MOS scores come from a user study with 8 participants. At ×8 scaling, MOS stayed above 3.6 for all games (3.63 to 4.00).
 
 ![Visual results](docs/visual_results.png)
 
@@ -110,7 +114,7 @@ No public dataset had stitched stereo frames for these games, so we built one. G
 
 The games cover complementary challenges: fast motion and color-critical gameplay (Beat Saber), complex lighting and frequent viewpoint changes (Pavlov VR), and diverse user-generated visual styles (VRChat).
 
-Ground-truth high-resolution images: [OneDrive link](DATASET_LINK)
+The dataset, including the ground-truth high-resolution images, is available on request.
 
 ## Requirements
 
@@ -148,7 +152,7 @@ python testquantization.py --config 1 --ckp checkpoints/BeatSaber/scale8Channels
 | Argument | Description |
 |---|---|
 | `--config` | Configuration ID |
-| `--ckp` | Path to the model checkpoint. The example uses the Beat Saber model at ×8 scale with 48 channels. |
+| `--ckp` | Path to the model checkpoint (example: Beat Saber model) |
 
 #### Prepare for stitching
 
